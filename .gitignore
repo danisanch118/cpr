@@ -1,0 +1,13 @@
+
+log/
+*.log
+*.bag
+*.bag.active
+
+# Carpetas de compilación
+build/
+install/
+
+# Otros temporales
+*.pyc
+__pycache__/
