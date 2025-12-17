@@ -24,7 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'pure_pursuit = wamv_control.pure_pursuit:main'
+            'pure_pursuit = wamv_control.pure_pursuit:main',
+            'control = wamv_control.control:main'
         ],
     },
 )
