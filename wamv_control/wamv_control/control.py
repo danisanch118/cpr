@@ -7,11 +7,12 @@ import time
 from sensor_msgs.msg import Imu, NavSatFix
 from geometry_msgs.msg import TwistStamped
 from std_msgs.msg import Float64
+from nav_msgs.msg import Odometry
 
 # --- CONSTANTES DEL MODELO (SIMULINK) ---
 # Controlador Velocidad Lineal (C_E)
-KP_V = 226.74
-KI_V = 1582.7
+KP_V = 226.74 #226.74
+KI_V = 1582.7 #1582.7
 
 # Controlador Velocidad Angular (C_M)
 KP_W = 1504.0
@@ -24,8 +25,7 @@ K_COUPLING = 1.0 / 1.027135
 # Límites de saturación (Ajustar según tus propulsores, ej: 1.0, 100.0, 1000.0)
 SATURATION_LIMIT = 2000.0 
 
-# Constantes Geográficas
-R_EARTH = 6378137.0  # Radio de la tierra en metros
+
 
 class BoatController(Node):
     def __init__(self):
@@ -34,6 +34,10 @@ class BoatController(Node):
         # --- Variables de Estado ---
         self.current_v = 0.0
         self.current_w = 0.0
+        self.v_filtered = 0.0
+        self.w_filtered = 0.0
+        self.alpha_w = 0.8  
+        self.alpha_v = 0.6
         
         # Referencias (Setpoints)
         self.ref_v = 0.0
@@ -60,11 +64,7 @@ class BoatController(Node):
         # 1. Referencias de velocidad (cmd_vel)
         self.create_subscription(TwistStamped, '/wamv/cmd_vel', self.ref_callback, 10)
         
-        # 2. IMU (Para velocidad angular actual)
-        self.create_subscription(Imu, '/wamv/sensors/imu/imu/data', self.imu_callback, 10)
-        
-        # 3. GPS (Para calcular velocidad lineal actual)
-        self.create_subscription(NavSatFix, '/wamv/sensors/gps/gps/fix', self.gps_callback, 10)
+        self.create_subscription(Odometry, '/odometry/filtered',self.odom_callback,10)   
 
         # --- Timer del Bucle de Control ---
         # Ejecutamos el PID a 50Hz (0.02s)
@@ -73,68 +73,16 @@ class BoatController(Node):
 
         self.get_logger().info("Nodo de Control PID del Barco Iniciado")
 
+    def odom_callback(self,msg):
+        self.current_v = msg.twist.twist.linear.x
+        self.current_w = msg.twist.twist.angular.z    
+
     def ref_callback(self, msg):
         """Recibe la referencia deseada (ej: teleop o path planner)"""
         self.ref_v = msg.twist.linear.x
         self.ref_w = msg.twist.angular.z
-
-    def imu_callback(self, msg):
-        """Lee la velocidad angular actual (Yaw Rate)"""
-        self.current_w = msg.angular_velocity.z
-
-    def gps_callback(self, msg):
-        """Calcula la velocidad lineal basándose en incrementos de posición"""
-        current_time = time.time() # O usar msg.header.stamp si está sincronizado
-
-        # 1. Inicializar origen en el primer mensaje
-        if self.first_fix:
-            self.origin_lat = msg.latitude
-            self.origin_lon = msg.longitude
-            x, y = self.latlon_to_meters(msg.latitude, msg.longitude)
-            self.last_x = x
-            self.last_y = y
-            self.last_gps_time = current_time
-            self.first_fix = False
-            return
-
-        # 2. Calcular posición actual en metros
-        x, y = self.latlon_to_meters(msg.latitude, msg.longitude)
-
-        # 3. Calcular velocidad (v = distancia / tiempo)
-        dt_gps = current_time - self.last_gps_time
         
-        if dt_gps > 0.001: # Evitar división por cero
-            dx = x - self.last_x
-            dy = y - self.last_y
-            dist = math.hypot(dx, dy)
-            
-            # Dirección simple: si nos movemos, asumimos forward positivo por ahora.
-            # (Para detectar marcha atrás se requeriría comparar el vector movimiento con el heading del compás)
-            self.current_v = dist / dt_gps 
-            
-            # Actualizar valores antiguos
-            self.last_x = x
-            self.last_y = y
-            self.last_gps_time = current_time
-
-    def latlon_to_meters(self, lat, lon):
-        """
-        Convierte Latitud/Longitud a coordenadas cartesianas (x, y) en metros.
-        X (Este) se corresponde a Longitud, Y (Norte) a Latitud.
-        """
-        if self.origin_lat is None:
-            return 0.0, 0.0
-
-        # Distancia en Y (Latitud)
-        y = R_EARTH * math.radians(lat - self.origin_lat)
         
-        # Factor de corrección para la Longitud (coseno de la latitud)
-        cos_lat = math.cos(math.radians(self.origin_lat))
-        
-        # Distancia en X (Longitud)
-        x = R_EARTH * math.radians(lon - self.origin_lon) * cos_lat
-        
-        return x, y
     def publish_cmd(self, linear, angular):
         cmd = TwistStamped()
         cmd.header.stamp = self.get_clock().now().to_msg()
