@@ -1,0 +1,69 @@
+ekf_filter_node:
+  ros__parameters:
+    use_sim_time: true
+    frequency: 30.0
+    sensor_timeout: 0.1
+    two_d_mode: true
+    
+    map_frame: world                   # ← Frame global fijo de Gazebo
+    odom_frame: odom                   # ← Frame intermedio para odometría continua
+    base_link_frame: wamv/wamv/base_link
+    world_frame: odom                  # ← La salida del EKF va a odom
+
+    imu0: /wamv/sensors/imu/imu/data
+    imu0_config: [true, true, false,
+                  false, false, true,
+                  false, false, false,
+                  false, false, true,
+                  true, true, false]
+    imu0_differential: false
+    imu0_remove_gravitational_acceleration: true
+       # <<< REDUCIR RUIDO: Process noise bajo para velocidades >>>
+    
+
+    odom0: /odometry/gps
+    odom0_config: [true, true, false,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false,
+                   false, false, false]
+    odom0_differential: false
+    process_noise_covariance: [
+      0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, # X: Sube esto (antes 0.005) para aceptar GPS
+      0.0,  0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, # Y: Sube esto
+      0.0,  0.0,  0.06, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, # Z
+      0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, # Roll
+      0.0,  0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, # Pitch
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.1,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, # Yaw: (Acepta giros reales)
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.005,0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, # Vx: BAJO → Suaviza tirones lineales
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.005,0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, # Vy: BAJO
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.04, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0, # Vz
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0, # Vroll
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0, # Vpitch
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0, # Vyaw: BAJO → Suaviza tirones angulares
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0, # Ax
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0, # Ay
+      0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.015 # Az
+    ]
+    smooth_lagged_data: true
+    lagged_data_cutoff: 0.1
+    dynamic_process_noise_covariance: false                        
+
+navsat_transform_node:                 # ← Nombre correcto del nodo (no "navsat_transform")
+  ros__parameters:
+    use_sim_time: true
+    frequency: 30.0
+    delay: 3.0
+    magnetic_declination_radians: 0.2126   # Sydney ≈ +12.2°
+    yaw_offset: 0.0
+    zero_altitude: true
+    broadcast_utm_transform: true          # ← Parámetro correcto en ROS2 Jazzy
+    publish_filtered_gps: true
+    
+    wait_for_datum: false                  # ← CLAVE 1: No esperar datum manual
+    # Elimina la línea "datum: ..." completamente
+
+    map_frame: world                       # ← CLAVE 2: Usa el frame real de Gazebo
+    odom_frame: odom
+    base_link_frame: wamv/wamv/base_link
+    # gps_frame e imu_frame no son necesarios si las TFs están bien (en VRX lo están)
