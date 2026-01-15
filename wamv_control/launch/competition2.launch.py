@@ -9,7 +9,6 @@ def generate_launch_description():
     # Ruta a tu paquete y al de VRX
     pkg_wamv_control = get_package_share_directory('wamv_control')
     pkg_vrx_gz = get_package_share_directory('vrx_gz')
-
     # Ruta a tu configuración de EKF
     ekf_config = os.path.join(pkg_wamv_control, 'config', 'ekf.yaml')
 
@@ -50,6 +49,23 @@ def generate_launch_description():
             ('odometry/filtered', '/odometry/filtered')
         ]
     )
+
+    pure_pursuit_node = Node(
+        package='wamv_control',
+        executable='pure_pursuit',
+        name='pure_pursuit',
+        output='screen',
+        
+    )
+
+    control_node = Node(
+        package='wamv_control',
+        executable='control',
+        name='boat_pid_controller',
+        output='screen',
+        
+    )
+
     delayed_localization = TimerAction(
         period=8.0,
         actions=[navsat_node, ekf_node]
@@ -57,5 +73,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         vrx_launch,
-        delayed_localization
+        delayed_localization,
+        pure_pursuit_node,
+        control_node,
+        
     ])

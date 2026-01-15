@@ -23,6 +23,7 @@ setup(
          glob(os.path.join('config', '*.yaml'))),
         (os.path.join('share', package_name, 'config'),
          glob(os.path.join('config', '*.params.yaml'))),  # opcional
+         (os.path.join('share', package_name, 'config'), glob('config/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -38,7 +39,9 @@ setup(
     entry_points={
         'console_scripts': [
             'pure_pursuit = wamv_control.pure_pursuit:main',
-            'control = wamv_control.control:main'
+            'control = wamv_control.control:main',
+            'rrt_planner = wamv_control.rrt_planner:main'
+
         ],
     },
 )
