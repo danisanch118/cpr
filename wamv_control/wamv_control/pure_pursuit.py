@@ -8,8 +8,9 @@ from tf2_geometry_msgs import PoseStamped
 from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Float64
 import numpy as np
-from nav_msgs.msg import Odometry
+from nav_msgs.msg import Odometry, Path
 from visualization_msgs.msg import Marker, MarkerArray
+from rclpy.qos import QoSProfile, DurabilityPolicy
 
 class PurePursuit(Node):
     def __init__(self):
@@ -22,8 +23,10 @@ class PurePursuit(Node):
         self.wheelbase = 2.06
         self.waypoint_tolerance = 0.5
         #self.waypoints = np.array([[1.5,1],[2.5, 2.5],[4.0, 4.0], [6.0, 6.0], [8.0, 8.0],[10.0, 10.0],[13.0, 13.0],[18.0, 15.0], [24.0, 16.0],[32.0, 16.0]])
-        self.waypoints = np.array([[1.0,1.0],[8.0, 8.0], [24.0, 16.0],[40.0, 26.0]])
+        #self.waypoints = np.array([[1.0,1.0],[8.0, 8.0], [24.0, 16.0],[40.0, 26.0]])
+        self.waypoints =[]
         self.finish = False
+        qos_latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
 
         #WAMV
         self.current_pose_x= 0.0
@@ -34,7 +37,8 @@ class PurePursuit(Node):
         self.data_odom_received = False
 
         #Subscriptores
-        self.create_subscription(Odometry, '/odometry/filtered',self.odom_callback,10)   
+        self.create_subscription(Odometry, '/odometry/filtered',self.odom_callback,10) 
+        self.create_subscription(Path, '/rrt/path', self.path_callback, qos_latched) 
         #Publicadores
         self.cmd_pub = self.create_publisher(TwistStamped, '/wamv/cmd_vel', 10)
 
@@ -61,8 +65,18 @@ class PurePursuit(Node):
          siny_cosp = 2 * (q.w * q.z + q.x * q.y)
          cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z)
          self.current_yaw = math.atan2(siny_cosp, cosy_cosp)
-
          self.data_odom_received = True
+
+    def path_callback(self, msg):
+        new_waypoints = []
+        for pose in msg.poses:
+            new_waypoints.append([pose.pose.position.x, pose.pose.position.y])
+        
+        self.waypoints = np.array(new_waypoints)
+        self.wap_index = 0 
+        self.get_logger().info(f"Nueva ruta recibida con {len(self.waypoints)} puntos")     
+
+        
 
     def get_target_point(self, lookahead):
         """
@@ -129,7 +143,11 @@ class PurePursuit(Node):
             if not self.data_odom_received:
                 self.get_logger().warn('Esperando datos de odometry/filtered')
                 return
-        
+            
+            if len(self.waypoints) == 0:
+              self.get_logger().info("Esperando ruta del RRT...", throttle_duration_sec=2)
+              self.publish_cmd(0.0, 0.0) 
+              return
                 
             target_point = self.get_target_point(self.lookAD)     
             
@@ -158,7 +176,7 @@ class PurePursuit(Node):
                 return    
                 
 
-            linear = 0.5 #self.max_linear_speed / (1 + abs(curvature) * 2.0)  
+            linear = 1.2 / (1 + abs(curvature) * 2.0)  
             angular = linear * curvature
             #self.publish_thrusters(linear, angular)    
 
