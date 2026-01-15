@@ -17,11 +17,11 @@ class PurePursuit(Node):
         super().__init__('pure_pursuit')
 
 
-        self.lookAD = 6.0
+        self.lookAD = 4.0
         self.max_linear_speed = 2.0
         self.max_angular_speed = 1.8
         self.wheelbase = 2.06
-        self.waypoint_tolerance = 0.5
+        self.waypoint_tolerance = 1.0
         #self.waypoints = np.array([[1.5,1],[2.5, 2.5],[4.0, 4.0], [6.0, 6.0], [8.0, 8.0],[10.0, 10.0],[13.0, 13.0],[18.0, 15.0], [24.0, 16.0],[32.0, 16.0]])
         #self.waypoints = np.array([[1.0,1.0],[8.0, 8.0], [24.0, 16.0],[40.0, 26.0]])
         self.waypoints =[]
@@ -50,7 +50,7 @@ class PurePursuit(Node):
         #self.marker_pub = self.create_publisher(MarkerArray, '/pure_pursuit/waypoints', 10)
      
         #Timer
-        self.timer = self.create_timer(0.05, self.control_loop)
+        self.timer = self.create_timer(0.1, self.control_loop)
 
         self.get_logger().info('Nodo Pure pursuit iniciado'
                                )

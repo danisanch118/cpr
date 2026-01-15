@@ -18,7 +18,7 @@ def generate_launch_description():
             os.path.join(pkg_vrx_gz, 'launch', 'competition.launch.py')
         ),
         launch_arguments={
-            'world': 'sydney_regatta',
+            'world': 'follow_path_task',
             'headless': 'False',
             # Puedes cambiar otros argumentos si quieres (paused, etc.)
         }.items()
