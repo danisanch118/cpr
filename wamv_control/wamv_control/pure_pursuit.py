@@ -50,7 +50,7 @@ class PurePursuit(Node):
         #self.marker_pub = self.create_publisher(MarkerArray, '/pure_pursuit/waypoints', 10)
      
         #Timer
-        self.timer = self.create_timer(0.05, self.control_loop)
+        self.timer = self.create_timer(0.1, self.control_loop)
 
         self.get_logger().info('Nodo Pure pursuit iniciado'
                                )
