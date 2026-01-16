@@ -23,8 +23,8 @@ class PurePursuit(Node):
         self.wheelbase = 2.06
         self.waypoint_tolerance = 0.5
         #self.waypoints = np.array([[1.5,1],[2.5, 2.5],[4.0, 4.0], [6.0, 6.0], [8.0, 8.0],[10.0, 10.0],[13.0, 13.0],[18.0, 15.0], [24.0, 16.0],[32.0, 16.0]])
-        #self.waypoints = np.array([[1.0,1.0],[8.0, 8.0], [24.0, 16.0],[40.0, 26.0]])
-        self.waypoints =[]
+        self.waypoints = np.array([[1.0,1.0],[8.0, 8.0], [24.0, 16.0],[70.0, 30.0],[100.0, 60.0],[80.0, 80.0],[40.0, 60.0]])
+        #self.waypoints =[]
         self.finish = False
         qos_latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
 
@@ -134,8 +134,10 @@ class PurePursuit(Node):
                         
                         continue
 
-        # Si no encontramos intersección (estamos muy lejos o al final),
-        # apuntamos al último waypoint
+	# Si apuntamos al último waypoint
+	
+	
+        # Si no encontramos intersección (estamos muy lejos o al final)
         return self.waypoints[-1]
 
     def control_loop(self):

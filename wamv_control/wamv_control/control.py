@@ -11,12 +11,12 @@ from nav_msgs.msg import Odometry
 
 # --- CONSTANTES DEL MODELO (SIMULINK) ---
 # Controlador Velocidad Lineal (C_E)
-KP_V = 226.74 #226.74
-KI_V = 1582.7 #1582.7
+KP_V = 220.0 #226.74
+KI_V = 250.0 #1582.7
 
 # Controlador Velocidad Angular (C_M)
-KP_W = 1504.0
-KI_W = 2974.9
+KP_W = 1600.0 #1504.0
+KI_W = 390.0 #2974.9
 
 # Ganancia de acoplamiento (Triangulo pequeño antes de la mezcla)
 # En simulink es 1 / 1.027135
