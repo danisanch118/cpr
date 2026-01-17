@@ -1,0 +1,4 @@
+rrt_planner:
+  ros__parameters:
+    goal_x: -47.0
+    goal_y: 90.0

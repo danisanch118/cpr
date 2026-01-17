@@ -11,7 +11,7 @@ def generate_launch_description():
     pkg_vrx_gz = get_package_share_directory('vrx_gz')
     # Ruta a tu configuración de EKF
     ekf_config = os.path.join(pkg_wamv_control, 'config', 'ekf.yaml')
-
+    rrt_config = os.path.join(pkg_wamv_control, 'config', 'rrt_params.yaml')
     # 1. Incluimos el launch completo de VRX (con bridges y todo)
     vrx_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -66,15 +66,27 @@ def generate_launch_description():
         
     )
 
+    rrt_node = Node(
+        package='wamv_control',
+        executable='rrt_planner',
+        name='rrt_planner',
+        output='screen',
+        parameters=[rrt_config],
+    )
+
     delayed_localization = TimerAction(
         period=8.0,
         actions=[navsat_node, ekf_node]
     )
-
+    
+    delayed_rrt = TimerAction(
+        period=15.0, 
+        actions=[rrt_node]
+    )
     return LaunchDescription([
         vrx_launch,
         delayed_localization,
         pure_pursuit_node,
         control_node,
-        
+        delayed_rrt
     ])
