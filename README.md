@@ -25,7 +25,7 @@ source ~/vrx_ws/install/setup.bash
 
 ros2 launch wamv_control competition2.launch.py
  
-Despues en otra terminal abrimos rviz
+#Despues en otra terminal abrimos rviz y elegimos el archivo de configuración #wamv.rviz dentro de la carpeta config
+
 ros2 launch vrx_gazebo rviz.launch.py
 
-y elegimos el archivo de configuracoin wamv.rviz dentro de la carpeta config
