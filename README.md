@@ -30,3 +30,8 @@ Despues en otra terminal abrimos rviz y elegimos el archivo de configuración wa
 ```bash
 ros2 launch vrx_gazebo rviz.launch.py
 ```
+Para visualizar los datos se ha utilizado la herramienta plotjuggler, para utilizarla hacemos lo siguiente:
+En una nueva terminal abrimos plotjuggler y elegimos el archivo layout.xml dentro de la carpeta de config
+```bash
+ros2 run plotjuggler plotjuggler
+```
