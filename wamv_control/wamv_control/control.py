@@ -18,8 +18,7 @@ KI_V = 245.0 #1582.7
 KP_W = 2000.0 #1504.0
 KI_W = 1400.0 #2974.9
 
-# Ganancia de acoplamiento (Triangulo pequeño antes de la mezcla)
-# En simulink es 1 / 1.027135
+# Ganancia de acoplamiento, tenemos en cuenta distancia entre eje central y eje de los motores
 K_COUPLING = 1.0 / 1.027135
 
 # Límites de saturación 
@@ -103,27 +102,23 @@ class BoatController(Node):
         self.integral_error_v += error_v * self.dt
         self.integral_error_w += error_w * self.dt
         
-        # Anti-windup simple (opcional, resetea si el error cruza cero)
-        # if (error_v > 0 and self.last_error_v < 0) or (error_v < 0 and self.last_error_v > 0): ...
-
-        # Salida PI Velocidad (C_E del diagrama)
+        # Salida PI Velocidad (C_E)
         # E = Kp*error + Ki*integral
         E = (KP_V * error_v) + (KI_V * self.integral_error_v)
 
-        # Salida PI Angular (C_M del diagrama)
+        # Salida PI Angular (C_M)
         M = (KP_W * error_w) + (KI_W * self.integral_error_w)
 
         # 3. Mezcla y Acoplamiento (Lógica central del diagrama)
         
-        # Ganancia triangular 1/1.027135 aplicada a M
+        # Momento dividido por el brazo
+        # M_coupled = M/b
         M_coupled = M * K_COUPLING
 
-        # Nodos de suma/resta antes de saturación
-        # El diagrama muestra división por 2 (bloques triangulares 1/2)
-        # Camino superior (Izquierda): Suma +E y Resta -M_coupled
+        # E_L = (E - M_coupled)/2
         input_L = 0.5 * (E - M_coupled)
         
-        # Camino inferior (Derecha): Suma +E y Suma +M_coupled
+        # E_R = (E + M_coupled)/2
         input_R = 0.5 * (E + M_coupled)
 
         # 4. Saturación
