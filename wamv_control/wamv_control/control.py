@@ -11,18 +11,18 @@ from nav_msgs.msg import Odometry
 
 # --- CONSTANTES DEL MODELO (SIMULINK) ---
 # Controlador Velocidad Lineal (C_E)
-KP_V = 226.74 #226.74
-KI_V = 1582.7 #1582.7
+KP_V = 350.0 #226.74
+KI_V = 245.0 #1582.7
 
 # Controlador Velocidad Angular (C_M)
-KP_W = 1504.0
-KI_W = 2974.9
+KP_W = 2000.0 #1504.0
+KI_W = 1400.0 #2974.9
 
 # Ganancia de acoplamiento (Triangulo pequeño antes de la mezcla)
 # En simulink es 1 / 1.027135
 K_COUPLING = 1.0 / 1.027135
 
-# Límites de saturación (Ajustar según tus propulsores, ej: 1.0, 100.0, 1000.0)
+# Límites de saturación 
 SATURATION_LIMIT = 2000.0 
 
 
@@ -56,7 +56,7 @@ class BoatController(Node):
         self.first_fix = True
 
         # --- Publishers (Salida a motores) ---
-        # Ajustar nombres de topics según la configuración de tu WAM-V
+        # Ajustar nombres de topics según la configuración 
         self.pub_left = self.create_publisher(Float64, '/wamv/thrusters/left/thrust', 10)
         self.pub_right = self.create_publisher(Float64, '/wamv/thrusters/right/thrust', 10)
         self.cmd_pub = self.create_publisher(TwistStamped, '/wamv/cmd_vel_act', 10)
